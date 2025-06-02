@@ -105,8 +105,8 @@ if __name__ == "__main__":
 
     ocr_response = process_with_mistral_ocr(filepath, base64_file, mistral_api_key)
 
-    markdown_text = ocr_response.get("markdown", "")
-    image_data_list = ocr_response.get("image_base64_list", [])
+    markdown_text = ocr_response.markdown
+    image_data_list = ocr_response.image_base64_list
 
     if not markdown_text:
         print("[ERROR] OCR returned no markdown")
