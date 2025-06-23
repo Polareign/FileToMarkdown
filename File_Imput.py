@@ -108,14 +108,32 @@ if __name__ == "__main__":
 
     # Extract markdown from all pages
     markdown_text = "\n\n".join(page.markdown for page in ocr_response.pages)
-    image_data_list = []  # You can extend this if you want to extract actual images later
+    image_data_list = []
+    print("[DEBUG] Checking for images in OCR response...")
+    for page in ocr_response.pages:
+        if hasattr(page, 'images') and page.images:
+            print(f"[DEBUG] Found {len(page.images)} images on this page")
+            for img in page.images:
+                if hasattr (img, 'base64') and img.base64:
+                    print("[DEBUG] Adding image to list")
+                    image_data_list.append(img.base64)
+                else:
+                    print("[DEBUG] Image found but no base64 data")
+        else:
+            print("[DEBUG] No images found on this page")
+    print(f"[DEBUG] Total images extracted: {len(image_data_list)}")
 
     if not markdown_text.strip():
         print("[ERROR] OCR returned no markdown")
         sys.exit(1)
 
-    # Optionally describe images here (disabled since no images being parsed)
-    markdown_with_descriptions = markdown_text
+
+    if image_data_list:
+        print(f"[STEP] Processing {len(image_data_list)} images for descriptions")
+        markdown_with_descriptions = replace_images_with_descriptions(markdown_text, image_data_list, openai_api_key)
+    else:
+        print("[INFO] No images found to describe")
+        markdown_with_descriptions = markdown_text
 
     # Save markdown
     with open("output.md", "w", encoding="utf-8") as f:
