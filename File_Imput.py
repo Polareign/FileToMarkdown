@@ -24,8 +24,9 @@ def encode_file_base64(filepath):
 
 def describe_image(base64_str, api_key):
     print("[STEP] Describing image using OpenAI GPT-4 Vision")
-    openai.api_key = api_key
-    response = openai.ChatCompletion.create(
+    from openai import OpenAI
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
         model="gpt-4-vision-preview",
         messages=[
             {"role": "user", "content": [
@@ -36,7 +37,7 @@ def describe_image(base64_str, api_key):
         max_tokens=300
     )
     print("[SUCCESS] Received image description")
-    return response.choices[0].message['content'].strip()
+    return response.choices[0].message.content.strip()
 
 def process_with_mistral_ocr(filepath, base64_file, mistral_api_key):
     print("[STEP] Preparing OCR request for Mistral")
