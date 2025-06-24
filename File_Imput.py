@@ -68,16 +68,16 @@ def process_with_mistral_ocr(filepath, base64_file, mistral_api_key):
         sys.exit(1)
 
 def replace_images_with_descriptions(markdown_text, image_data_list, openai_api_key):
-    print("[STEP] Replacing [Image #] tags with AI descriptions")
+    print("[STEP] Adding AI descriptions under ![img-#.jpeg] tags")
     def replace(match):
         idx = int(match.group(1))
         if idx < len(image_data_list):
             base64_image = image_data_list[idx]
             description = describe_image(base64_image, openai_api_key)
-            return f"\n\n**Image Description:** {description}\n"
+            return f"{match.group(0)}\n\n**Image Description:** {description}\n"
         return match.group(0)
 
-    return re.sub(r"\[Image (\d+)\]", replace, markdown_text)
+    return re.sub(r"!\[img-(\d+)\.jpeg\]\(img-\d+\.jpeg\)", replace, markdown_text)
 
 if __name__ == "__main__":
     print("[MAIN] Starting file processing")
