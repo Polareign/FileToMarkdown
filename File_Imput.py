@@ -116,17 +116,17 @@ if __name__ == "__main__":
             for img in page.images:
                 print(f"[DEBUG] Image object type: {type(img)}")
                 print(f"[DEBUG] Image attributes: {dir(img)}")
-                if hasattr(img, 'base64') and img.base64:
+                if hasattr(img, 'image_base64') and img.image_base64:
                     print("[DEBUG] Adding image to list")
-                    image_data_list.append(img.base64)
+                    image_data_list.append(img.image_base64)
                 elif hasattr(img, 'data'):
-                    print("[DEBUG] Found img.data instead of img.base64")
+                    print("[DEBUG] Found img.data instead of img.image_base64")
                     image_data_list.append(img.data)
                 elif hasattr(img, 'content'):
-                    print("[DEBUG] Found img.content instead of img.base64")
+                    print("[DEBUG] Found img.content instead of img.image_base64")
                     image_data_list.append(img.content)
                 else:
-                    print(f"[DEBUG] Image found but no base64 data. Available attributes: {[attr for attr in dir(img) if not attr.startswith('_')]}")
+                    print(f"[DEBUG] Image found but no image_base64 data. Available attributes: {[attr for attr in dir(img) if not attr.startswith('_')]}")
         else:
             print("[DEBUG] No images found on this page")
     print(f"[DEBUG] Total images extracted: {len(image_data_list)}")
