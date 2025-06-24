@@ -27,7 +27,7 @@ def describe_image(base64_str, api_key):
     from openai import OpenAI
     client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        model="gpt-4o",
         messages=[
             {"role": "user", "content": [
                 {"type": "text", "text": "Describe this image in markdown-friendly prose."},
