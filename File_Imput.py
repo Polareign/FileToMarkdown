@@ -5,6 +5,9 @@ import re
 from mistralai import Mistral
 import openai
 import markdown
+from langchain_mistralai.chat_models import ChatMistralAI
+from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
 
 print("[SCRIPT] Script loaded")
 
@@ -96,8 +99,9 @@ if __name__ == "__main__":
 
     mistral_api_key = os.environ.get("MISTRALAPIKEY")
     openai_api_key = os.environ.get("OPENAI_API_KEY")
+    langchain_api_key = os.environ.get("LANGCHAIN_API_KEY")
 
-    if not mistral_api_key or not openai_api_key:
+    if not mistral_api_key or not openai_api_key or not langchain_api_key:
         print("[ERROR] Missing API keys in environment variables")
         sys.exit(1)
 
@@ -144,15 +148,19 @@ if __name__ == "__main__":
         print("[INFO] No images found to describe")
         markdown_with_descriptions = markdown_text
 
+    # Send To Langchain 
+    doc = Document(page_content=markdown_with_descriptions)
+    prompt = ChatPromptTemplate.from_messages([
+    ("system", "Clean up and summarize the following markdown document."),
+    ("human", "{input}")
+    ])
+    llm = ChatMistralAI(api_key=mistral_api_key, model="mistral-large-latest")
+    chain = prompt | llm
+    result = chain.invoke({"input": doc.page_content})
+
     # Save markdown
     with open("output.md", "w", encoding="utf-8") as f:
-        f.write(markdown_with_descriptions)
-    print("[OUTPUT] Markdown saved to output.md")
-
-    # Save HTML
-    html_content = markdown.markdown(markdown_with_descriptions)
-    with open("output.html", "w", encoding="utf-8") as f:
-        f.write(f"<html><body>{html_content}</body></html>")
-    print("[OUTPUT] HTML saved to output.html")
+        f.write(result.content)
+    print("[OUTPUT] File saved to output.md")
 
     print("[DONE] Processing complete. Open output.md or output.html to view the result.")
