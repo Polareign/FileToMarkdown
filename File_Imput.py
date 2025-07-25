@@ -27,8 +27,7 @@ def encode_file_base64(filepath):
 
 def describe_image(base64_str, api_key):
     print("[STEP] Describing image using OpenAI GPT-4 Vision")
-    from openai import OpenAI
-    client = OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -99,9 +98,8 @@ if __name__ == "__main__":
 
     mistral_api_key = os.environ.get("MISTRALAPIKEY")
     openai_api_key = os.environ.get("OPENAI_API_KEY")
-    langchain_api_key = os.environ.get("LANGCHAIN_API_KEY")
 
-    if not mistral_api_key or not openai_api_key or not langchain_api_key:
+    if not mistral_api_key or not openai_api_key:
         print("[ERROR] Missing API keys in environment variables")
         sys.exit(1)
 
@@ -119,8 +117,6 @@ if __name__ == "__main__":
         if hasattr(page, 'images') and page.images:
             print(f"[DEBUG] Found {len(page.images)} images on this page")
             for img in page.images:
-                print(f"[DEBUG] Image object type: {type(img)}")
-                print(f"[DEBUG] Image attributes: {dir(img)}")
                 if hasattr(img, 'image_base64') and img.image_base64:
                     print("[DEBUG] Adding image to list")
                     image_data_list.append(img.image_base64)
@@ -131,7 +127,7 @@ if __name__ == "__main__":
                     print("[DEBUG] Found img.content instead of img.image_base64")
                     image_data_list.append(img.content)
                 else:
-                    print(f"[DEBUG] Image found but no image_base64 data. Available attributes: {[attr for attr in dir(img) if not attr.startswith('_')]}")
+                    print(f"[DEBUG] Image found but no usable base64 data")
         else:
             print("[DEBUG] No images found on this page")
     print(f"[DEBUG] Total images extracted: {len(image_data_list)}")
@@ -140,7 +136,6 @@ if __name__ == "__main__":
         print("[ERROR] OCR returned no markdown")
         sys.exit(1)
 
-
     if image_data_list:
         print(f"[STEP] Processing {len(image_data_list)} images for descriptions")
         markdown_with_descriptions = replace_images_with_descriptions(markdown_text, image_data_list, openai_api_key)
@@ -148,11 +143,11 @@ if __name__ == "__main__":
         print("[INFO] No images found to describe")
         markdown_with_descriptions = markdown_text
 
-    # Send To Langchain 
+    # Send To Langchain
     doc = Document(page_content=markdown_with_descriptions)
     prompt = ChatPromptTemplate.from_messages([
-    ("system", "Clean up and summarize the following markdown document."),
-    ("human", "{input}")
+        ("system", "Clean up and summarize the following markdown document."),
+        ("human", "{input}")
     ])
     llm = ChatMistralAI(api_key=mistral_api_key, model="mistral-large-latest")
     chain = prompt | llm
@@ -163,4 +158,4 @@ if __name__ == "__main__":
         f.write(result.content)
     print("[OUTPUT] File saved to output.md")
 
-    print("[DONE] Processing complete. Open output.md or output.html to view the result.")
+    print("[DONE] Processing complete. Open output.md to view the result.")
