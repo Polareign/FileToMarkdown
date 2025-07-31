@@ -22,8 +22,10 @@ from langchain.text_splitter import (
     Language
 )
 from langchain.docstore.document import Document
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores.faiss import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+
+
 
 print("[SCRIPT] Multi-Document Advanced Chunker with Context Management")
 
@@ -174,3 +176,26 @@ def search_similar_chunks(query, index, chunks, openai_api_key, top_k=5):
     query_embedding = client.embeddings.create(model="text-embedding-3-small", input=query).data[0].embedding
     D, I = index.search(np.array([query_embedding]).astype("float32"), top_k)
     return [chunks[i] for i in I[0]]
+
+if __name__ == "main":
+    if len(sys.argv) < 3:
+        print("Usage: python multi_doc_chunker.py <file> <OPENAI_API_KEY>")
+        sys.exit(1)
+
+    filepath = sys.argv[1]
+    openai_api_key = sys.argv[2]
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    doc_name = os.path.basename(filepath)
+    headings = extract_headings_from_text(text)
+    summary = generate_document_summary(text, openai_api_key, doc_name)
+    chunks = advanced_chunker(text, filepath, summary, headings)
+    chunks = embed_chunks(chunks, openai_api_key)
+    index = build_faiss_index(chunks)
+
+    with open("chunks.json", "w") as f:
+        json.dump([{"content": c.page_content, "metadata": c.metadata} for c in chunks], f)
+    faiss.write_index(index, "faiss.index")
+    print("[DONE] Chunks and FAISS saved.")
